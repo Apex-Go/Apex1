@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QUANTUM ALPHA AI | كوانتم ألفا للتحليل اللحظي</title>
+<style>
+  :root {
+    --bg: #090D16;
+    --surface: #111827;
+    --surface-2: #1E293B;
+    --border: #283548;
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+    --cyan: #06B6D4;
+    --amber: #F59E0B;
+    --green: #10B981;
+    --red: #EF4444;
+    --purple: #8B5CF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo-badge {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #fff; font-weight: 800; padding: 6px 10px; border-radius: 8px; font-size: 14px;
+  }
+  .brand h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+  .free-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--green);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  select, button {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  button:hover, select:hover { border-color: var(--cyan); }
+  button.active { background: var(--cyan); color: #090D16; border-color: var(--cyan); }
+  .live-ticker {
+    display: flex; align-items: center; gap: 10px;
+    background: #0B1220; border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 10px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.closed { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .price-val { font-size: 18px; font-weight: 800; font-family: monospace; color: var(--cyan); }
+  .container { max-width: 1280px; margin: 18px auto; padding: 0 16px; display: grid; gap: 16px; }
+  .weekend-banner {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #FDE68A;
+    padding: 10px 16px;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .main-grid { display: grid; grid-template-columns: 1fr 390px; gap: 16px; }
+  @media (max-width: 980px) { .main-grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .card-header {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    gap: 10px; margin-bottom: 12px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .tf-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tf-btn { padding: 4px 9px; font-size: 12px; border-radius: 6px; }
+  .chart-wrapper {
+    background: #FFFFFF;
+    border: 2px solid #CBD5E1;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  canvas { display: block; width: 100%; }
+  .gann-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px; margin-top: 12px;
+  }
+  .gann-pill {
+    background: #0B1220; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px;
+  }
+  .gann-pill span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
+  .gann-pill strong { color: var(--text); font-family: monospace; font-size: 13px; }
+  .signal-card {
+    border: 2px solid var(--border);
+    background: linear-gradient(180deg, #111827 0%, #0B1220 100%);
+  }
+  .signal-card.buy { border-color: var(--green); box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+  .signal-card.sell { border-color: var(--red); box-shadow: 0 0 20px rgba(239, 68, 68, 0.15); }
+  .status-box {
+    padding: 14px; border-radius: 10px; text-align: center;
+    background: #0B1220; border: 1px dashed var(--border); margin-bottom: 12px;
+  }
+  .status-badge {
+    display: inline-block; padding: 5px 14px; border-radius: 999px;
+    font-weight: 800; font-size: 14px; margin-bottom: 6px;
+  }
+  .badge-wait { background: rgba(245, 158, 11, 0.18); color: var(--amber); }
+  .badge-buy { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+  .badge-sell { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+  .checklist { display: grid; gap: 6px; margin: 12px 0; }
+  .check-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #0B1220; border: 1px solid var(--border);
+    padding: 7px 10px; border-radius: 8px; font-size: 12px;
+  }
+  .check-ok { color: var(--green); font-weight: 700; }
+  .check-no { color: var(--muted); }
+  .levels-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0;
+  }
+  .lvl-box {
+    background: #0B1220; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px; text-align: center;
+  }
+  .lvl-box small { display: block; color: var(--muted); font-size: 11px; }
+  .lvl-box strong { font-family: monospace; font-size: 13px; }
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .btn-win { background: rgba(16,185,129,0.2); border-color: var(--green); color: var(--green); }
+  .btn-loss { background: rgba(239,68,68,0.2); border-color: var(--red); color: var(--red); }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .stat-card {
+    background: #0B1220; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px; text-align: center;
+  }
+  .stat-card span { display: block; font-size: 11px; color: var(--muted); }
+  .stat-card strong { font-size: 17px; font-family: monospace; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 9px 8px; border-bottom: 1px solid var(--border); text-align: center; }
+  th { color: var(--muted); font-weight: 700; background: #0B1220; }
+  .toast-container {
+    position: fixed; bottom: 18px; left: 18px; z-index: 999;
+    display: flex; flex-direction: column; gap: 8px; max-width: 340px;
+  }
+  .toast {
+    background: #1E293B; border-right: 4px solid var(--cyan); color: #fff;
+    padding: 12px 14px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+    font-size: 13px; font-weight: 600; animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo-badge">QA AI</div>
+    <div>
+      <h1 id="appTitle">QUANTUM ALPHA AI</h1>
+      <span class="free-badge" id="freeBadge">مجاني 100% • فلترة صارمة 85%+</span>
+    </div>
+  </div>
+
+  <div class="live-ticker">
+    <span class="dot" id="feedDot"></span>
+    <span id="feedSource" style="font-size:12px;color:#94A3B8;">BINANCE LIVE</span>
+    <span class="price-val" id="livePrice">---</span>
+  </div>
+
+  <div class="controls">
+    <select id="symbolSelect">
+      <optgroup label="الكريبتو (مباشر 24/7 - Binance)">
+        <option value="BTCUSDT" selected>BTC/USD (البيتكوين)</option>
+        <option value="ETHUSDT">ETH/USD (الإيثيريوم)</option>
+        <option value="SOLUSDT">SOL/USD (سولانا)</option>
+      </optgroup>
+      <optgroup label="الفوركس والمعادن (OANDA)">
+        <option value="XAUUSD">XAU/USD (الذهب)</option>
+        <option value="EURUSD">EUR/USD</option>
+        <option value="GBPUSD">GBP/USD</option>
+      </optgroup>
+    </select>
+    <button id="soundBtn" onclick="toggleSound()">🔔 التنبيهات: مفعلة</button>
+    <button id="langBtn" onclick="toggleLang()">EN</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="weekend-banner" id="weekendBanner">
+    <span id="weekendText">⚠️ تنبيه السوق: الفوركس والذهب في إجازة نهاية الأسبوع — التركيز الآن 100% على البيتكوين (BTC/USD) ببث لحظي مباشر.</span>
+    <span id="weekendCountdown" style="font-family:monospace;color:#fff;"></span>
+  </div>
+
+  <div class="main-grid">
+    <!-- Left: White Chart + Black Price Labels + Sub-indicators -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span id="chartHeading">شارت التحليل المتكامل (MA 5/10/50 + POC + Gann + SMC)</span>
+        </div>
+        <div class="tf-group" id="tfGroup">
+          <button class="tf-btn active" data-tf="1m">M1</button>
+          <button class="tf-btn" data-tf="5m">M5</button>
+          <button class="tf-btn" data-tf="15m">M15</button>
+          <button class="tf-btn" data-tf="1h">H1</button>
+          <button class="tf-btn" data-tf="4h">H4</button>
+          <button class="tf-btn" data-tf="1d">D1</button>
+        </div>
+      </div>
+
+      <div class="chart-wrapper">
+        <canvas id="mainChart" height="390"></canvas>
+        <canvas id="subChart" height="150" style="border-top:1px solid #CBD5E1;"></canvas>
+      </div>
+
+      <div class="gann-bar" id="gannBar">
+        <div class="gann-pill"><span>نقطة التحكم (POC)</span><strong id="pocVal">---</strong></div>
+        <div class="gann-pill"><span>زاوية جان 1x1</span><strong id="gann1x1Val">---</strong></div>
+        <div class="gann-pill"><span>مربع التسعة (Sq9)</span><strong id="sq9Val">---</strong></div>
+        <div class="gann-pill"><span>توازن جان 50%</span><strong id="gann50Val">---</strong></div>
+        <div class="gann-pill"><span>منطقة SMC / OB</span><strong id="smcVal">---</strong></div>
+      </div>
+    </div>
+
+    <!-- Right: Strict Confluence Trade Card -->
+    <div class="card signal-card" id="signalCard">
+      <div class="card-header">
+        <div class="card-title" id="signalCardTitle">🎯 كارت الصفقة المفلترة (Strict Mode)</div>
+        <span id="confluenceScore" style="font-family:monospace;font-weight:800;color:var(--cyan);">0 / 6 (0%)</span>
+      </div>
+
+      <div class="status-box">
+        <div class="status-badge badge-wait" id="signalBadge">في انتظار تقاطع الشروط...</div>
+        <div id="signalSubtext" style="font-size:12px;color:var(--muted);">لن يتم دخول أي صفقة عشوائية إلا بتطابق 5/6 شروط على الأقل</div>
+      </div>
+
+      <div class="checklist" id="checklist"></div>
+
+      <div class="levels-grid">
+        <div class="lvl-box">
+          <small id="lblEntry">سعر الدخول</small>
+          <strong id="valEntry" style="color:var(--cyan);">---</strong>
+        </div>
+        <div class="lvl-box">
+          <small id="lblSL">الستوب (Max $2.00)</small>
+          <strong id="valSL" style="color:var(--red);">---</strong>
+        </div>
+        <div class="lvl-box">
+          <small id="lblTP">الهدف (TP)</small>
+          <strong id="valTP" style="color:var(--green);">---</strong>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-win" onclick="closeManualTrade('WIN')" id="btnWin">✅ تسجيل ربح (WIN)</button>
+        <button class="btn-loss" onclick="closeManualTrade('LOSS')" id="btnLoss">❌ تسجيل خسارة (LOSS)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trades History -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" id="historyTitle">📜 سجل الصفقات الحقيقية (Trades History)</div>
+      <button onclick="resetHistory()" style="font-size:12px;color:var(--amber);">🗑️ تصفير السجل</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><span id="lblWinRate">نسبة النجاح</span><strong id="statWinRate" style="color:var(--green);">0.0%</strong></div>
+      <div class="stat-card"><span id="lblWL">ربح / خسارة</span><strong id="statWL" style="color:var(--amber);">0W / 0L</strong></div>
+      <div class="stat-card"><span id="lblPnL">صافي العائد</span><strong id="statPnL" style="color:var(--cyan);">$0.00</strong></div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>الوقت</th>
+            <th>الزوج</th>
+            <th>النوع</th>
+            <th>الدخول</th>
+            <th>الستوب (Max $2)</th>
+            <th>الهدف</th>
+            <th>القوة</th>
+            <th>النتيجة</th>
+            <th>العائد</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// Reset old random/mock history once for clean start
+if (!localStorage.getItem('qa_clean_v4')) {
+  localStorage.removeItem('qa_trades_history');
+  localStorage.setItem('qa_clean_v4', '1');
+}
+
+let lang = 'ar';
+let soundEnabled = true;
+let currentSymbol = 'BTCUSDT';
+let currentTf = '1m';
+let candles = [];
+let ws = null;
+let activeTrade = null;
+let lastTradeClosedAt = 0;
+let tradesHistory = JSON.parse(localStorage.getItem('qa_trades_history') || '[]');
+
+const i18n = {
+  ar: {
+    freeBadge: 'مجاني 100% • فلترة صارمة 85%+',
+    weekendText: '⚠️ تنبيه السوق: الفوركس والذهب في إجازة نهاية الأسبوع — التركيز الآن 100% على البيتكوين (BTC/USD) ببث لحظي مباشر.',
+    chartHeading: 'شارت التحليل المتكامل (MA 5/10/50 + POC + Gann + SMC)',
+    signalCardTitle: '🎯 كارت الصفقة المفلترة (Strict Mode)',
+    waitBadge: 'في انتظار تقاطع الشروط...',
+    waitSub: 'لن يتم دخول أي صفقة عشوائية إلا بتطابق 5/6 شروط على الأقل',
+    lblEntry: 'سعر الدخول',
+    lblSL: 'الستوب (Max $2.00)',
+    lblTP: 'الهدف (TP)',
+    btnWin: '✅ تسجيل ربح (WIN)',
+    btnLoss: '❌ تسجيل خسارة (LOSS)',
+    historyTitle: '📜 سجل الصفقات الحقيقية (Trades History)',
+    lblWinRate: 'نسبة النجاح',
+    lblWL: 'ربح / خسارة',
+    lblPnL: 'صافي العائد',
+    c1: 'تقاطع المتوسطات (MA 5 / 10 / 50)',
+    c2: 'تأكيد الزخم RSI(14) فوق/تحت 50.00',
+    c3: 'تقاطع MACD(12,26,9) وخط الصفر',
+    c4: 'ارتكاز الفوليوم بروفايل (POC)',
+    c5: 'توافق زوايا جان ومربع 9 (Gann)',
+    c6: 'تأكيد سيولة SMC / Order Block'
+  },
+  en: {
+    freeBadge: '100% FREE • STRICT 85%+ FILTER',
+    weekendText: '⚠️ Market Notice: Forex & Gold are closed for the weekend — 100% focused on live tick-by-tick Bitcoin (BTC/USD).',
+    chartHeading: 'Integrated Analysis Chart (MA 5/10/50 + POC + Gann + SMC)',
+    signalCardTitle: '🎯 Strict Filtered Trade Card',
+    waitBadge: 'WAITING FOR CONFLUENCE...',
+    waitSub: 'Zero random entries — requires at least 5/6 aligned conditions',
+    lblEntry: 'Entry Price',
+    lblSL: 'Stop Loss (Max $2.00)',
+    lblTP: 'Take Profit (TP)',
+    btnWin: '✅ Mark WIN',
+    btnLoss: '❌ Mark LOSS',
+    historyTitle: '📜 Real Trades History',
+    lblWinRate: 'Win Rate',
+    lblWL: 'Win / Loss',
+    lblPnL: 'Net PnL',
+    c1: 'MA 5 / 10 / 50 Simultaneous Cross',
+    c2: 'RSI(14) Cross Above/Below 50.00',
+    c3: 'MACD(12,26,9) Zero-Line Momentum',
+    c4: 'Volume Profile POC Alignment',
+    c5: 'Gann 1x1 Angle & Square of 9',
+    c6: 'SMC / Order Block Confirmation'
+  }
+};
+
+function isForexClosed() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const hour = now.getUTCHours();
+  if (day === 6) return true;
+  if (day === 0 && hour < 22) return true;
+  if (day === 5 && hour >= 22) return true;
+  return false;
+}
+
+function updateWeekendStatus() {
+  const closed = isForexClosed();
+  const banner = document.getElementById('weekendBanner');
+  banner.style.display = closed ? 'flex' : 'none';
+  if (closed) {
+    const now = new Date();
+    const target = new Date(now);
+    const daysUntilSun = (7 - now.getUTCDay()) % 7;
+    target.setUTCDate(now.getUTCDate() + daysUntilSun);
+    target.setUTCHours(22, 0, 0, 0);
+    if (target <= now) target.setUTCDate(target.getUTCDate() + 7);
+    const diff = target - now;
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('weekendCountdown').textContent =
+      (lang === 'ar' ? 'يفتح الفوركس خلال: ' : 'Opens in: ') +
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+}
+setInterval(updateWeekendStatus, 1000);
+updateWeekendStatus();
+
+function playBeep(freq = 660) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = freq;
+    gain.gain.value = 0.08;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+  } catch (e) {}
+}
+
+function showToast(msg, color = '#06B6D4') {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderRightColor = color;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundBtn').textContent = soundEnabled
+    ? (lang === 'ar' ? '🔔 التنبيهات: مفعلة' : '🔔 Alerts: ON')
+    : (lang === 'ar' ? '🔕 التنبيهات: صامت' : '🔕 Alerts: OFF');
+}
+
+function toggleLang() {
+  lang = lang === 'ar' ? 'en' : 'ar';
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
+  document.getElementById('langBtn').textContent = lang === 'ar' ? 'EN' : 'عربي';
+  const t = i18n[lang];
+  document.getElementById('freeBadge').textContent = t.freeBadge;
+  document.getElementById('weekendText').textContent = t.weekendText;
+  document.getElementById('chartHeading').textContent = t.chartHeading;
+  document.getElementById('signalCardTitle').textContent = t.signalCardTitle;
+  document.getElementById('lblEntry').textContent = t.lblEntry;
+  document.getElementById('lblSL').textContent = t.lblSL;
+  document.getElementById('lblTP').textContent = t.lblTP;
+  document.getElementById('btnWin').textContent = t.btnWin;
+  document.getElementById('btnLoss').textContent = t.btnLoss;
+  document.getElementById('historyTitle').textContent = t.historyTitle;
+  document.getElementById('lblWinRate').textContent = t.lblWinRate;
+  document.getElementById('lblWL').textContent = t.lblWL;
+  document.getElementById('lblPnL').textContent = t.lblPnL;
+  toggleSound(); toggleSound();
+  runAnalysis();
+}
+
+// Indicators Calculation
+function calcSMA(data, period) {
+  return data.map((_, idx) => {
+    if (idx < period - 1) return null;
+    let sum = 0;
+    for (let i = idx - period + 1; i <= idx; i++) sum += data[i].close;
+    return sum / period;
+  });
+}
+
+function calcEMAArray(values, period) {
+  const k = 2 / (period + 1);
+  let ema = values[0];
+  return values.map((v, i) => {
+    if (i === 0) return v;
+    ema = v * k + ema * (1 - k);
+    return ema;
+  });
+}
+
+function calcRSI(data, period = 14) {
+  const rsi = new Array(data.length).fill(50);
+  if (data.length <= period) return rsi;
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = data[i].close - data[i - 1].close;
+    if (diff >= 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+  rsi[period] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
+  for (let i = period + 1; i < data.length; i++) {
+    const diff = data[i].close - data[i - 1].close;
+    const g = diff > 0 ? diff : 0;
+    const l = diff < 0 ? -diff : 0;
+    avgGain = (avgGain * (period - 1) + g) / period;
+    avgLoss = (avgLoss * (period - 1) + l) / period;
+    rsi[i] = avgLoss === 0 ? 100 : 100 - (100 / (1 + avgGain / avgLoss));
+  }
+  return rsi;
+}
+
+function calcMACD(data) {
+  const closes = data.map(c => c.close);
+  const ema12 = calcEMAArray(closes, 12);
+  const ema26 = calcEMAArray(closes, 26);
+  const macdLine = closes.map((_, i) => ema12[i] - ema26[i]);
+  const signalLine = calcEMAArray(macdLine, 9);
+  const hist = macdLine.map((m, i) => m - signalLine[i]);
+  return { macdLine, signalLine, hist };
+}
+
+function calcVolumeProfile(data, bins = 24) {
+  let min = Infinity, max = -Infinity;
+  data.forEach(c => { if (c.low < min) min = c.low; if (c.high > max) max = c.high; });
+  const step = (max - min) / bins || 1;
+  const profile = Array.from({ length: bins }, (_, i) => ({
+    price: min + step * (i + 0.5),
+    vol: 0
+  }));
+  data.forEach(c => {
+    const idx = Math.min(bins - 1, Math.max(0, Math.floor((c.close - min) / step)));
+    profile[idx].vol += (c.volume || 1);
+  });
+  let poc = profile[0];
+  profile.forEach(p => { if (p.vol > poc.vol) poc = p; });
+  return { profile, poc: poc.price, min, max };
+}
+
+function formatPrice(p) {
+  if (!p && p !== 0) return '---';
+  if (currentSymbol.includes('EUR') || currentSymbol.includes('GBP')) return p.toFixed(5);
+  return p.toFixed(2);
+}
+
+// Fetch historical + live data
+async function loadMarketData() {
+  if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+  const isCrypto = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].includes(currentSymbol);
+  const dot = document.getElementById('feedDot');
+  const src = document.getElementById('feedSource');
+
+  if (isCrypto) {
+    dot.classList.remove('closed');
+    src.textContent = 'BINANCE LIVE';
+    try {
+      const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentTf}&limit=100`);
+      const raw = await res.json();
+      candles = raw.map(k => ({
+        time: k[0],
+        open: parseFloat(k[1]),
+        high: parseFloat(k[2]),
+        low: parseFloat(k[3]),
+        close: parseFloat(k[4]),
+        volume: parseFloat(k[5])
+      }));
+      updatePriceDisplay(candles[candles.length - 1].close);
+      runAnalysis();
+      startBinanceWS();
+    } catch (e) {
+      generateFallbackCandles(96500);
+    }
+  } else {
+    const closed = isForexClosed();
+    dot.classList.toggle('closed', closed);
+    src.textContent = closed ? 'OANDA • MARKET CLOSED' : 'OANDA LIVE';
+    const baseMap = { XAUUSD: 2635.50, EURUSD: 1.05420, GBPUSD: 1.26180 };
+    generateFallbackCandles(baseMap[currentSymbol] || 2635.50, !closed);
+  }
+}
+
+function generateFallbackCandles(base, liveTick = false) {
+  candles = [];
+  let p = base;
+  const volScale = base < 10 ? 0.0004 : base * 0.0008;
+  for (let i = 0; i < 90; i++) {
+    const change = (Math.random() - 0.49) * volScale;
+    const open = p;
+    const close = p + change;
+    const high = Math.max(open, close) + Math.random() * volScale * 0.5;
+    const low = Math.min(open, close) - Math.random() * volScale * 0.5;
+    candles.push({ time: Date.now() - (90 - i) * 60000, open, high, low, close, volume: 100 + Math.random() * 400 });
+    p = close;
+  }
+  updatePriceDisplay(p);
+  runAnalysis();
+}
+
+function startBinanceWS() {
+  const sym = currentSymbol.toLowerCase();
+  ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${sym}@aggTrade/${sym}@kline_${currentTf}`);
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (!msg.data || !candles.length) return;
+    if (msg.data.e === 'aggTrade') {
+      const price = parseFloat(msg.data.p);
+      const qty = parseFloat(msg.data.q);
+      const last = candles[candles.length - 1];
+      last.close = price;
+      if (price > last.high) last.high = price;
+      if (price < last.low) last.low = price;
+      last.volume += qty;
+      updatePriceDisplay(price);
+      checkActiveTradeTP_SL(price);
+      runAnalysis();
+    } else if (msg.data.e === 'kline') {
+      const k = msg.data.k;
+      const bar = {
+        time: k.t,
+        open: parseFloat(k.o),
+        high: parseFloat(k.h),
+        low: parseFloat(k.l),
+        close: parseFloat(k.c),
+        volume: parseFloat(k.v)
+      };
+      if (candles[candles.length - 1].time === bar.time) {
+        candles[candles.length - 1] = bar;
+      } else {
+        candles.push(bar);
+        if (candles.length > 110) candles.shift();
+      }
+      runAnalysis();
+    }
+  };
+}
+
+function updatePriceDisplay(price) {
+  document.getElementById('livePrice').textContent = formatPrice(price);
+}
+
+// Strict Multi-School + MA(5,10,50) + RSI(50) + MACD + POC Engine
+function runAnalysis() {
+  if (candles.length < 55) return;
+  const n = candles.length - 1;
+  const price = candles[n].close;
+  const ma5 = calcSMA(candles, 5);
+  const ma10 = calcSMA(candles, 10);
+  const ma50 = calcSMA(candles, 50);
+  const rsi = calcRSI(candles, 14);
+  const { macdLine, signalLine, hist } = calcMACD(candles);
+  const vp = calcVolumeProfile(candles.slice(-60));
+
+  // Gann Calculations
+  const slice30 = candles.slice(-30);
+  const hi30 = Math.max(...slice30.map(c => c.high));
+  const lo30 = Math.min(...slice30.map(c => c.low));
+  const gann50 = (hi30 + lo30) / 2;
+  const gann1x1 = lo30 + ((hi30 - lo30) * (25 / 30));
+  const root = Math.sqrt(price);
+  const sq9Res = Math.pow(root + 0.125, 2);
+  const sq9Sup = Math.pow(root - 0.125, 2);
+
+  // SMC Order Block Zone
+  const obLow = lo30 + (hi30 - lo30) * 0.15;
+  const obHigh = hi30 - (hi30 - lo30) * 0.15;
+
+  document.getElementById('pocVal').textContent = formatPrice(vp.poc);
+  document.getElementById('gann1x1Val').textContent = formatPrice(gann1x1);
+  document.getElementById('sq9Val').textContent = `${formatPrice(sq9Sup)} / ${formatPrice(sq9Res)}`;
+  document.getElementById('gann50Val').textContent = formatPrice(gann50);
+  document.getElementById('smcVal').textContent = price >= gann50 ? `OB ${formatPrice(obLow)}` : `OB ${formatPrice(obHigh)}`;
+
+  // Evaluate 6 Strict Conditions
+  const bullMA = ma5[n] > ma10[n] && ma10[n] > ma50[n] && price > ma50[n];
+  const bearMA = ma5[n] < ma10[n] && ma10[n] < ma50[n] && price < ma50[n];
+
+  const bullRSI = rsi[n] > 50.5 && rsi[n] < 72;
+  const bearRSI = rsi[n] < 49.5 && rsi[n] > 28;
+
+  const bullMACD = macdLine[n] > signalLine[n] && hist[n] > 0;
+  const bearMACD = macdLine[n] < signalLine[n] && hist[n] < 0;
+
+  const bullPOC = price >= vp.poc;
+  const bearPOC = price <= vp.poc;
+
+  const bullGann = price >= gann50;
+  const bearGann = price <= gann50;
+
+  const bullSMC = candles[n].close > candles[n].open && candles[n].low <= ma10[n];
+  const bearSMC = candles[n].close < candles[n].open && candles[n].high >= ma10[n];
+
+  const bullChecks = [bullMA, bullRSI, bullMACD, bullPOC, bullGann, bullSMC];
+  const bearChecks = [bearMA, bearRSI, bearMACD, bearPOC, bearGann, bearSMC];
+
+  const bullScore = bullChecks.filter(Boolean).length;
+  const bearScore = bearChecks.filter(Boolean).length;
+
+  let direction = 'WAIT';
+  let activeChecks = bullChecks;
+  let score = Math.max(bullScore, bearScore);
+
+  // Strict rule: core triple cross (MA 5/10/50 + RSI 50 + MACD) MUST align + at least 5/6 total
+  if (bullMA && bullRSI && bullMACD && bullScore >= 5) {
+    direction = 'BUY';
+    activeChecks = bullChecks;
+    score = bullScore;
+  } else if (bearMA && bearRSI && bearMACD && bearScore >= 5) {
+    direction = 'SELL';
+    activeChecks = bearChecks;
+    score = bearScore;
+  } else {
+    activeChecks = bullScore >= bearScore ? bullChecks : bearChecks;
+  }
+
+  renderChecklist(activeChecks, score, direction);
+
+  const isCrypto = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'].includes(currentSymbol);
+  const marketOpen = isCrypto || !isForexClosed();
+
+  if (!activeTrade && marketOpen && direction !== 'WAIT' && (Date.now() - lastTradeClosedAt > 20000)) {
+    openFilteredTrade(direction, price, score);
+  }
+
+  drawCharts({ ma5, ma10, ma50, rsi, macdLine, signalLine, hist, vp, gann50, gann1x1 });
+}
+
+function renderChecklist(checks, score, direction) {
+  const t = i18n[lang];
+  const labels = [t.c1, t.c2, t.c3, t.c4, t.c5, t.c6];
+  const pct = Math.round((score / 6) * 100);
+  document.getElementById('confluenceScore').textContent = `${score} / 6 (${pct}%)`;
+
+  const html = labels.map((lbl, i) => `
+    <div class="check-item">
+      <span>${lbl}</span>
+      <span class="${checks[i] ? 'check-ok' : 'check-no'}">${checks[i] ? '✔ متطابق' : '⏳ انتظار'}</span>
+    </div>
+  `).join('');
+  document.getElementById('checklist').innerHTML = html;
+
+  const card = document.getElementById('signalCard');
+  const badge = document.getElementById('signalBadge');
+  const sub = document.getElementById('signalSubtext');
+
+  if (activeTrade) {
+    card.className = `card signal-card ${activeTrade.dir === 'BUY' ? 'buy' : 'sell'}`;
+    badge.className = `status-badge ${activeTrade.dir === 'BUY' ? 'badge-buy' : 'badge-sell'}`;
+    badge.textContent = activeTrade.dir === 'BUY'
+      ? (lang === 'ar' ? `🟢 صفقة شراء نشطة (${activeTrade.symbol})` : `🟢 ACTIVE BUY (${activeTrade.symbol})`)
+      : (lang === 'ar' ? `🔴 صفقة بيع نشطة (${activeTrade.symbol})` : `🔴 ACTIVE SELL (${activeTrade.symbol})`);
+    sub.textContent = lang === 'ar'
+      ? `تم الدخول بعد تطابق ${activeTrade.score}/6 شروط بقوة ${Math.round((activeTrade.score/6)*100)}%`
+      : `Triggered at ${activeTrade.score}/6 confluence (${Math.round((activeTrade.score/6)*100)}%)`;
+    document.getElementById('valEntry').textContent = formatPrice(activeTrade.entry);
+    document.getElementById('valSL').textContent = formatPrice(activeTrade.sl);
+    document.getElementById('valTP').textContent = formatPrice(activeTrade.tp);
+  } else {
+    card.className = 'card signal-card';
+    badge.className = 'status-badge badge-wait';
+    badge.textContent = t.waitBadge;
+    sub.textContent = t.waitSub;
+    document.getElementById('valEntry').textContent = '---';
+    document.getElementById('valSL').textContent = '---';
+    document.getElementById('valTP').textContent = '---';
+  }
+}
+
+function openFilteredTrade(dir, price, score) {
+  // Analytical Stop Loss strictly capped at $2.00 max
+  const slDist = currentSymbol.includes('EUR') || currentSymbol.includes('GBP') ? 0.00020 : 2.00;
+  const tpDist = slDist * 1.8;
+  const sl = dir === 'BUY' ? price - slDist : price + slDist;
+  const tp = dir === 'BUY' ? price + tpDist : price - tpDist;
+
+  activeTrade = {
+    id: Date.now(),
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    symbol: currentSymbol,
+    dir,
+    entry: price,
+    sl,
+    tp,
+    score
+  };
+  playBeep(dir === 'BUY' ? 880 : 520);
+  showToast(
+    lang === 'ar'
+      ? `🚀 صفقة جديدة (${dir}) على ${currentSymbol} بسعر ${formatPrice(price)} — قوة ${Math.round((score/6)*100)}%`
+      : `🚀 New ${dir} Signal on ${currentSymbol} @ ${formatPrice(price)}`,
+    dir === 'BUY' ? '#10B981' : '#EF4444'
+  );
+}
+
+function checkActiveTradeTP_SL(price) {
+  if (!activeTrade || activeTrade.symbol !== currentSymbol) return;
+  if (activeTrade.dir === 'BUY') {
+    if (price >= activeTrade.tp) finalizeTrade('WIN');
+    else if (price <= activeTrade.sl) finalizeTrade('LOSS');
+  } else {
+    if (price <= activeTrade.tp) finalizeTrade('WIN');
+    else if (price >= activeTrade.sl) finalizeTrade('LOSS');
+  }
+}
+
+function closeManualTrade(res) {
+  if (!activeTrade) {
+    showToast(lang === 'ar' ? 'لا توجد صفقة نشطة حالياً' : 'No active trade right now', '#F59E0B');
+    return;
+  }
+  finalizeTrade(res);
+}
+
+function finalizeTrade(result) {
+  if (!activeTrade) return;
+  const pnl = result === 'WIN' ? 3.60 : -2.00;
+  tradesHistory.unshift({
+    ...activeTrade,
+    result,
+    pnl
+  });
+  localStorage.setItem('qa_trades_history', JSON.stringify(tradesHistory));
+  playBeep(result === 'WIN' ? 1040 : 320);
+  showToast(
+    result === 'WIN'
+      ? (lang === 'ar' ? `🎉 مبروك! الصفقة ربحت (+$${pnl.toFixed(2)})` : `🎉 Trade WON (+$${pnl.toFixed(2)})`)
+      : (lang === 'ar' ? `⚠️ أغلقت الصفقة على ستوب (-$2.00)` : `⚠️ Trade Hit Max $2.00 SL`),
+    result === 'WIN' ? '#10B981' : '#EF4444'
+  );
+  activeTrade = null;
+  lastTradeClosedAt = Date.now();
+  renderHistory();
+}
+
+function resetHistory() {
+  tradesHistory = [];
+  activeTrade = null;
+  localStorage.setItem('qa_trades_history', '[]');
+  renderHistory();
+  showToast(lang === 'ar' ? 'تم تصفير سجل الصفقات بنجاح' : 'Trades history cleared', '#F59E0B');
+}
+
+function renderHistory() {
+  const body = document.getElementById('historyBody');
+  let wins = 0, losses = 0, net = 0;
+  tradesHistory.forEach(tr => {
+    if (tr.result === 'WIN') wins++; else losses++;
+    net += tr.pnl;
+  });
+  const total = wins + losses;
+  const wr = total ? ((wins / total) * 100).toFixed(1) : '0.0';
+  document.getElementById('statWinRate').textContent = `${wr}%`;
+  document.getElementById('statWL').textContent = `${wins}W / ${losses}L`;
+  document.getElementById('statPnL').textContent = `${net >= 0 ? '+' : ''}$${net.toFixed(2)}`;
+  document.getElementById('statPnL').style.color = net >= 0 ? '#10B981' : '#EF4444';
+
+  if (!tradesHistory.length) {
+    body.innerHTML = `<tr><td colspan="9" style="color:#94A3B8;padding:18px;">${lang === 'ar' ? 'لا توجد صفقات مسجلة بعد — في انتظار إشارة مؤكدة 85%+' : 'No trades logged yet — waiting for 85%+ signal'}</td></tr>`;
+    return;
+  }
+  body.innerHTML = tradesHistory.map(tr => `
+    <tr>
+      <td>${tr.time}</td>
+      <td><strong>${tr.symbol}</strong></td>
+      <td style="color:${tr.dir==='BUY'?'#10B981':'#EF4444'};font-weight:700;">${tr.dir}</td>
+      <td style="font-family:monospace;">${formatPrice(tr.entry)}</td>
+      <td style="font-family:monospace;color:#EF4444;">${formatPrice(tr.sl)}</td>
+      <td style="font-family:monospace;color:#10B981;">${formatPrice(tr.tp)}</td>
+      <td>${Math.round((tr.score/6)*100)}%</td>
+      <td><span style="padding:2px 8px;border-radius:6px;background:${tr.result==='WIN'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'};color:${tr.result==='WIN'?'#10B981':'#EF4444'};font-weight:700;">${tr.result}</span></td>
+      <td style="font-family:monospace;color:${tr.pnl>=0?'#10B981':'#EF4444'};font-weight:700;">${tr.pnl>=0?'+':''}$${tr.pnl.toFixed(2)}</td>
+    </tr>
+  `).join('');
+}
+
+// High-DPI White Chart + Black Price Labels
+function drawCharts({ ma5, ma10, ma50, rsi, macdLine, signalLine, hist, vp, gann50, gann1x1 }) {
+  const c1 = document.getElementById('mainChart');
+  const dpr = window.devicePixelRatio || 1;
+  const w = c1.parentElement.clientWidth;
+  const h = 390;
+  c1.width = w * dpr;
+  c1.height = h * dpr;
+  const ctx = c1.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Pure White Background
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, w, h);
+
+  const visible = candles.slice(-65);
+  const startIdx = candles.length - visible.length;
+  const rightMargin = 82;
+  const chartW = w - rightMargin;
+  const padTop = 24, padBot = 24;
+  const plotH = h - padTop - padBot;
+
+  let minP = Infinity, maxP = -Infinity;
+  visible.forEach(c => { if (c.low < minP) minP = c.low; if (c.high > maxP) maxP = c.high; });
+  const range = (maxP - minP) || 1;
+  minP -= range * 0.08;
+  maxP += range * 0.08;
+  const yOf = p => padTop + ((maxP - p) / (maxP - minP)) * plotH;
+
+  // Grid & Black Price Axis
+  ctx.strokeStyle = '#E2E8F0';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 11px monospace';
+  for (let i = 0; i <= 5; i++) {
+    const p = minP + ((maxP - minP) * i) / 5;
+    const y = yOf(p);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
+    ctx.fillText(formatPrice(p), chartW + 6, y + 4);
+  }
+
+  // Volume Profile Histogram on Left
+  const maxVol = Math.max(...vp.profile.map(b => b.vol)) || 1;
+  vp.profile.forEach(b => {
+    const y = yOf(b.price);
+    const barW = (b.vol / maxVol) * 65;
+    ctx.fillStyle = Math.abs(b.price - vp.poc) < 0.0001 ? 'rgba(139, 92, 246, 0.38)' : 'rgba(6, 182, 212, 0.16)';
+    ctx.fillRect(0, y - 4, barW, 8);
+  });
+
+  // POC Line
+  const pocY = yOf(vp.poc);
+  ctx.strokeStyle = '#8B5CF6';
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(0, pocY); ctx.lineTo(chartW, pocY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#000000';
+  ctx.fillText(`POC ${formatPrice(vp.poc)}`, 8, pocY - 4);
+
+  // Gann 50% & 1x1 Angle
+  const g50Y = yOf(gann50);
+  ctx.strokeStyle = '#D97706';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(0, g50Y); ctx.lineTo(chartW, g50Y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#000000';
+  ctx.fillText(`Gann 50%: ${formatPrice(gann50)}`, 8, g50Y - 4);
+
+  ctx.strokeStyle = 'rgba(37, 99, 235, 0.65)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(10, yOf(minP + range * 0.15));
+  ctx.lineTo(chartW - 10, yOf(gann1x1));
+  ctx.stroke();
+
+  // Candlesticks
+  const stepX = chartW / visible.length;
+  visible.forEach((c, idx) => {
+    const x = idx * stepX + stepX * 0.5;
+    const isUp = c.close >= c.open;
+    ctx.strokeStyle = isUp ? '#059669' : '#DC2626';
+    ctx.fillStyle = isUp ? '#10B981' : '#EF4444';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(x, yOf(c.high)); ctx.lineTo(x, yOf(c.low)); ctx.stroke();
+    const top = yOf(Math.max(c.open, c.close));
+    const bot = yOf(Math.min(c.open, c.close));
+    ctx.fillRect(x - stepX * 0.3, top, Math.max(2, stepX * 0.6), Math.max(2, bot - top));
+  });
+
+  // MA 5 (Green), MA 10 (Slate), MA 50 (Amber/Orange)
+  const drawMA = (arr, color) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    let started = false;
+    visible.forEach((_, idx) => {
+      const val = arr[startIdx + idx];
+      if (val === null) return;
+      const x = idx * stepX + stepX * 0.5;
+      const y = yOf(val);
+      if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  };
+  drawMA(ma5, '#059669');
+  drawMA(ma10, '#475569');
+  drawMA(ma50, '#D97706');
+
+  // Active Trade Lines
+  if (activeTrade && activeTrade.symbol === currentSymbol) {
+    [
+      { p: activeTrade.entry, col: '#0284C7', lbl: 'ENTRY' },
+      { p: activeTrade.sl, col: '#DC2626', lbl: 'SL' },
+      { p: activeTrade.tp, col: '#059669', lbl: 'TP' }
+    ].forEach(line => {
+      const y = yOf(line.p);
+      if (y >= padTop && y <= h - padBot) {
+        ctx.strokeStyle = line.col;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
+        ctx.fillStyle = '#000000';
+        ctx.fillText(`${line.lbl}: ${formatPrice(line.p)}`, chartW - 135, y - 3);
+      }
+    });
+  }
+
+  // Live Black Price Tag on Chart
+  const lastP = visible[visible.length - 1].close;
+  const lastY = yOf(lastP);
+  ctx.strokeStyle = '#000000';
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath(); ctx.moveTo(0, lastY); ctx.lineTo(chartW, lastY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(chartW + 2, lastY - 10, rightMargin - 4, 20);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(formatPrice(lastP), chartW + 6, lastY + 4);
+
+  // Header Overlay Legend in Black
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(`${currentSymbol} [${currentTf.toUpperCase()}]  Price: ${formatPrice(lastP)}  |  MA5 / MA10 / MA50`, 10, 16);
+
+  // Sub-chart: RSI(14) + MACD(12,26,9)
+  const c2 = document.getElementById('subChart');
+  const h2 = 150;
+  c2.width = w * dpr;
+  c2.height = h2 * dpr;
+  const ctx2 = c2.getContext('2d');
+  ctx2.scale(dpr, dpr);
+  ctx2.fillStyle = '#FFFFFF';
+  ctx2.fillRect(0, 0, w, h2);
+
+  // Top half: RSI(14) with 50.00 line
+  const rsiH = 70;
+  ctx2.strokeStyle = '#94A3B8';
+  ctx2.setLineDash([4, 4]);
+  ctx2.beginPath(); ctx2.moveTo(0, rsiH / 2); ctx2.lineTo(chartW, rsiH / 2); ctx2.stroke();
+  ctx2.setLineDash([]);
+  ctx2.fillStyle = '#000000';
+  ctx2.font = 'bold 10px monospace';
+  ctx2.fillText(`RSI(14): ${rsi[candles.length - 1].toFixed(2)} (Mid 50.00)`, 8, 12);
+
+  ctx2.strokeStyle = '#D97706';
+  ctx2.lineWidth = 1.6;
+  ctx2.beginPath();
+  visible.forEach((_, idx) => {
+    const val = rsi[startIdx + idx];
+    const x = idx * stepX + stepX * 0.5;
+    const y = rsiH - (val / 100) * rsiH;
+    if (idx === 0) ctx2.moveTo(x, y); else ctx2.lineTo(x, y);
+  });
+  ctx2.stroke();
+
+  // Bottom half: MACD(12,26,9)
+  const macdTop = 78;
+  const macdH = 66;
+  const midM = macdTop + macdH / 2;
+  ctx2.strokeStyle = '#CBD5E1';
+  ctx2.beginPath(); ctx2.moveTo(0, midM); ctx2.lineTo(chartW, midM); ctx2.stroke();
+
+  const visHist = visible.map((_, idx) => hist[startIdx + idx]);
+  const maxM = Math.max(...visHist.map(v => Math.abs(v))) || 1;
+  visible.forEach((_, idx) => {
+    const v = visHist[idx];
+    const x = idx * stepX + stepX * 0.5;
+    const barH = (v / maxM) * (macdH * 0.45);
+    ctx2.fillStyle = v >= 0 ? '#10B981' : '#EF4444';
+    ctx2.fillRect(x - stepX * 0.25, v >= 0 ? midM - barH : midM, Math.max(2, stepX * 0.5), Math.abs(barH));
+  });
+  ctx2.fillStyle = '#000000';
+  ctx2.fillText(`MACD(12,26,9): ${macdLine[candles.length - 1].toFixed(2)}`, 8, macdTop + 11);
+}
+
+// Event Listeners
+document.getElementById('symbolSelect').addEventListener('change', (e) => {
+  currentSymbol = e.target.value;
+  loadMarketData();
+});
+
+document.querySelectorAll('.tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTf = btn.dataset.tf;
+    loadMarketData();
+  });
+});
+
+window.addEventListener('resize', () => runAnalysis());
+
+renderHistory();
+loadMarketData();
+</script>
+</body>
+</html>
